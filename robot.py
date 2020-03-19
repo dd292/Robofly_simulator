@@ -1,6 +1,6 @@
 import numpy as np
 
-class robot:
+class Robot:
 	winglength = .6 * 2.54 / 100 
 	l = .013 # length of fly
 	h = .0025 # thickness of body
@@ -22,6 +22,11 @@ class robot:
 	torque_bias_x = 0  #Nm
 	gyro_bias_x = 0  # rad/s
 	
-	def dynamics(self,current_state):
-		dydt=np.matmul(current_state,slef.Jmat)
+	def dynamics(self, current_state, t):
+		dydt = np.matmul(current_state.T, self.Jmat)
 		return dydt
+#
+# if __name__ == '__main__':
+# 	start_state = np.array([0, 1, 0])
+# 	R1= Robot
+# 	print(R1.dynamics(R1,start_state,2))
