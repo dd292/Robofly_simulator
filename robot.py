@@ -29,16 +29,43 @@ class Robot:
 #state =[theta, omegabody, posworld, vbody]
 
 	def dynamics(self, current_state, time, u):
-		theta=  current_state[0:3]
-		omegabody= current_state[3:6]
-		posworld= current_state[6:9]
-		vobdy= current_state[9:12]
-		f_l= u[1]
-		tau_c= u[2:]
+		theta = current_state[0:3]
+		omegabody = current_state[3:6]
+		posworld = current_state[6:9]
+		vbody = current_state[9:12]
 
-		R= self.rot_matrix(theta)
-		W= omega2thetadot_matrix(theta)
-		aerodynamics= fly_aero(vbody,omegabody)
+		f_c = u[0]
+		tau_c = u[1:]
+
+		R = self.rot_matrix(theta)
+		W = self.omega2thetadot_matrix(theta)
+		aerodynamics= self.fly_aero(vbody, omegabody)
+		f_d = aerodynamics[0, :].transpose()
+		tau_d = aerodynamics[1, :].transpose()
+
+		# Forces in body coords
+		f_g = np.matmul(R.transpose(), np.array([0, 0, -self.m*self.g]))
+		f_l = np.array([0, 0, f_c])
+
+		f = f_l + f_g + f_d.reshape([3])
+
+		#moment/torques (body coords)
+		tau = tau_c + tau_d - self.ks*np.array([[theta[0]], [theta[1]], [0]])
+		#fictitious force and torque
+		fictitious_f= self.m *np.cross(omegabody,vbody)
+		fictitious_tau= np.cross(omegabody, np.matmul(self.Jmat,omegabody))
+
+		#geometric
+		xdotworld= np.matmul(R, vbody)
+		vdotbody= (1/self.m) * (f-fictitious_f)
+		thetadot= np.matmul(W, omegabody)
+		vec= (tau.reshape([3])-fictitious_tau)
+
+		omegadotbody= np.linalg.lstsq(self.Jmat, vec)[0]
+		qdot = np.array([thetadot, omegadotbody, xdotworld, vdotbody])
+
+		return qdot
+
 
 
 		return dydt
@@ -53,7 +80,7 @@ class Robot:
 		f_d = -self.b_w*v_w
 		tau_d= np.cross(r_w, f_d)
 
-		return np.array([f_d,tau_d])
+		return np.array([[f_d],[tau_d]])
 
 
 
@@ -88,6 +115,7 @@ class Robot:
 			[0, st1/ct2, ct1/ct2]])
 		return W
 if __name__ == '__main__':
-	start_state = np.array([0, 1, 0, 0, 2, 0])
+	start_state = np.array([0, 1, 0, 0, 2, 0, 1, 0, 0, 2, 0, 1])
 	R1= Robot()
-	print(R1.fly_aero(start_state[0:3],start_state[3:6]))
+	input= np.array([[1], [1], [1], [1]])
+	print(R1.dynamics(start_state, 1, input))
