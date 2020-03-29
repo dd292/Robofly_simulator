@@ -1,3 +1,7 @@
+# class for the dynamics of robot
+# originally written by Prof. Sawyer B Fuller
+# converted to python by Daksh Dhingra
+
 import numpy as np
 
 class Robot:
@@ -21,12 +25,69 @@ class Robot:
 	force_bias_y = 0  #N
 	torque_bias_x = 0  #Nm
 	gyro_bias_x = 0  # rad/s
-	
-	def dynamics(self, current_state, t):
-		dydt = np.matmul(current_state.T, self.Jmat)
+
+#state =[theta, omegabody, posworld, vbody]
+
+	def dynamics(self, current_state, time, u):
+		theta=  current_state[0:3]
+		omegabody= current_state[3:6]
+		posworld= current_state[6:9]
+		vobdy= current_state[9:12]
+		f_l= u[1]
+		tau_c= u[2:]
+
+		R= self.rot_matrix(theta)
+		W= omega2thetadot_matrix(theta)
+		aerodynamics= fly_aero(vbody,omegabody)
+
+
 		return dydt
-#
-# if __name__ == '__main__':
-# 	start_state = np.array([0, 1, 0])
-# 	R1= Robot
-# 	print(R1.dynamics(R1,start_state,2))
+	def fly_aero (self, v, omega):
+		# calculate stroke-averaged forces due to aerodynamic drag on flapping
+		# wings. assumes force is applied at point r_w away from center of mass in
+		# z-direction in body-coordinates. v_w is the vel at that point.
+		# assumes drag force f_d = -b_w * v_w. this has been tested in a wind
+		# tunnel for x- and y-directions but not z-direction
+		r_w = np.array([0, 0, self.r_w])
+		v_w = v + np.cross(omega, r_w)
+		f_d = -self.b_w*v_w
+		tau_d= np.cross(r_w, f_d)
+
+		return np.array([f_d,tau_d])
+
+
+
+
+
+
+	def rot_matrix(self,theta):
+		#convention Rotate about Z by theta3 then rotate about new Y by theta2 and rotate about new X by theta1. Alternatively,
+		# rotate about X by theta1 then rotate about inital Y by theta2 and  finally rotate about inital Z by theta3
+		cz= np.cos(theta[2])
+		cy = np.cos(theta[1])
+		cx = np.cos(theta[0])
+		sz = np.sin(theta[2])
+		sy = np.sin(theta[1])
+		sx = np.sin(theta[0])
+		R = np.array([[cz*cy,   cz*sy*sx - cx*sz,   sz*sx + cz*cx*sy],
+					[cy*sz,   cz*cx + sz*sy*sx,   cx*sz*sy - cz*sx],
+					[ -sy,    cy*sx,              cy*cx]])
+		return R
+	def omega2thetadot_matrix(self,euler_theta):# still trying to figure what it is
+		# transform euler angle rates to angular rot rate vector omega
+		# thetadot = W * omega
+
+		st1 = np.sin(euler_theta[0])
+		ct1 = np.cos(euler_theta[0])
+		tt2 = np.tan(euler_theta[1])
+		ct2 = np.cos(euler_theta[1])
+
+		#XYZ (airplane) convention
+		W = np.array([[1, st1*tt2, ct1*tt2],
+			[0, ct1, -st1],
+			[0, st1/ct2, ct1/ct2]])
+		return W
+if __name__ == '__main__':
+	start_state = np.array([0, 1, 0, 0, 2, 0])
+	R1= Robot()
+	print(R1.fly_aero(start_state[0:3],start_state[3:6]))
