@@ -40,35 +40,31 @@ class Robot:
 		R = self.rot_matrix(theta)
 		W = self.omega2thetadot_matrix(theta)
 		aerodynamics= self.fly_aero(vbody, omegabody)
-		f_d = aerodynamics[0, :].transpose()
-		tau_d = aerodynamics[1, :].transpose()
-
+		f_d = aerodynamics[0][0]
+		tau_d = aerodynamics[1][0]
 		# Forces in body coords
 		f_g = np.matmul(R.transpose(), np.array([0, 0, -self.m*self.g]))
 		f_l = np.array([0, 0, f_c])
 
-		f = f_l + f_g + f_d.reshape([3])
-
+		f = f_l + f_g + f_d
 		#moment/torques (body coords)
-		tau = tau_c + tau_d - self.ks*np.array([[theta[0]], [theta[1]], [0]])
+		tau_thread= self.ks*np.array([theta[0], theta[1], 0])
+		tau = tau_c + tau_d - tau_thread
+
 		#fictitious force and torque
-		fictitious_f= self.m *np.cross(omegabody,vbody)
-		fictitious_tau= np.cross(omegabody, np.matmul(self.Jmat,omegabody))
+		fictitious_f = self.m * np.cross(omegabody, vbody)
+		fictitious_tau= np.cross(omegabody, np.matmul(self.Jmat, omegabody))
 
 		#geometric
 		xdotworld= np.matmul(R, vbody)
-		vdotbody= (1/self.m) * (f-fictitious_f)
+		vdotbody= (1/self.m) * (f - fictitious_f)
 		thetadot= np.matmul(W, omegabody)
-		vec= (tau.reshape([3])-fictitious_tau)
+		vec= (tau-fictitious_tau)
 
-		omegadotbody= np.linalg.lstsq(self.Jmat, vec)[0]
-		qdot = np.array([thetadot, omegadotbody, xdotworld, vdotbody])
+		omegadotbody= np.linalg.lstsq(self.Jmat, vec,rcond=None)[0]
+		qdot = np.concatenate([thetadot, omegadotbody, xdotworld, vdotbody])
 
 		return qdot
-
-
-
-		return dydt
 	def fly_aero (self, v, omega):
 		# calculate stroke-averaged forces due to aerodynamic drag on flapping
 		# wings. assumes force is applied at point r_w away from center of mass in
@@ -81,11 +77,6 @@ class Robot:
 		tau_d= np.cross(r_w, f_d)
 
 		return np.array([[f_d],[tau_d]])
-
-
-
-
-
 
 	def rot_matrix(self,theta):
 		#convention Rotate about Z by theta3 then rotate about new Y by theta2 and rotate about new X by theta1. Alternatively,
@@ -117,5 +108,6 @@ class Robot:
 if __name__ == '__main__':
 	start_state = np.array([0, 1, 0, 0, 2, 0, 1, 0, 0, 2, 0, 1])
 	R1= Robot()
-	input= np.array([[1], [1], [1], [1]])
+	input= np.array([1, 1, 1, 1])
+	print('something')
 	print(R1.dynamics(start_state, 1, input))
