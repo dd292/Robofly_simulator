@@ -27,7 +27,6 @@ class Robot:
 	gyro_bias_x = 0  # rad/s
 
 #state =[theta, omegabody, posworld, vbody]
-
 	def dynamics(self, current_state, time, u):
 		theta = current_state[0:3]
 		omegabody = current_state[3:6]
@@ -65,6 +64,7 @@ class Robot:
 		qdot = np.concatenate([thetadot, omegadotbody, xdotworld, vdotbody])
 
 		return qdot
+
 	def fly_aero (self, v, omega):
 		# calculate stroke-averaged forces due to aerodynamic drag on flapping
 		# wings. assumes force is applied at point r_w away from center of mass in
@@ -91,6 +91,7 @@ class Robot:
 					[cy*sz,   cz*cx + sz*sy*sx,   cx*sz*sy - cz*sx],
 					[ -sy,    cy*sx,              cy*cx]])
 		return R
+
 	def omega2thetadot_matrix(self,euler_theta):# still trying to figure what it is
 		# transform euler angle rates to angular rot rate vector omega
 		# thetadot = W * omega
