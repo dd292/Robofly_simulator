@@ -4,11 +4,11 @@ This repo is for devloping a 3D simulator for flapping wing robots on python. Th
 # Installation
 Required libraries for running the controller
 
--numpy
--control
--csv
--matplotlib
--scipy
+- numpy
+- control
+- csv
+- matplotlib
+- scipy
 
 # Files 
 - 'controller.py' - class with lateral and altitude controller methods
