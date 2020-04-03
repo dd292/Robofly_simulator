@@ -11,11 +11,11 @@ Required libraries for running the controller
 - scipy
 
 # Files 
-- 'controller.py' - class with lateral and altitude controller methods
-- 'robot.py' - class defining the dynamics of roboFly. Contains methods for calculating drag force and drag torque calculation.
-- 'simulator.py' - Simulator class containing methods for plot, save data and ODE solver.
-- 'test.py' - main fuction to define initial and desired state and call ODE solver.
-- 'load_and_plot.py' - script used to plot the saved data.
+- `controller.py` - class with lateral and altitude controller methods
+- `robot.py` - class defining the dynamics of roboFly. Contains methods for calculating drag force and drag torque calculation.
+- `simulator.py` - Simulator class containing methods for plot, save data and ODE solver.
+- `test.py` - main fuction to define initial and desired state and call ODE solver.
+- `load_and_plot.py` - script used to plot the saved data.
 
 
 # Refrences
